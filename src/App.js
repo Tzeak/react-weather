@@ -20,10 +20,10 @@ class App extends Component {
 }
 //List of components
 function convertFahrenheit(ktemp) {
-	return ktemp * (9/5) - 459.67;
+	return Math.trunc(ktemp * (9/5) - 459.67);
 }
 function convertCelsius(ktemp) {
-	return ktemp - 273.15;
+	return Math.trunc(ktemp - 273.15);
 }
 
 class DayWeatherCard extends Component {
@@ -31,8 +31,8 @@ class DayWeatherCard extends Component {
 		const day = this.props.day;
 		const conditions = this.props.conditions;
 
-		const temp_max = this.props.temp_max; //TODO: Create Celsius/Fahrenheit conversions
-		const temp_min = this.props.temp_min;
+		const temp_max = convertFahrenheit(this.props.temp_max); //TODO: Create Celsius/Fahrenheit conversions
+		const temp_min = convertFahrenheit(this.props.temp_min);
 		const weekday = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 		return (
 			<td className='weather-card' id={weekday[day]}>
@@ -47,8 +47,8 @@ class DayWeatherCard extends Component {
 					<td colSpan="2">{conditions}</td>
 				</tr>
 				<tr>
-					<td>{temp_max}</td>
-					<td>{temp_min}</td>
+					<td>Max: {temp_max}</td>
+					<td>Min: {temp_min}</td>
 				</tr>
 			</tbody>
 			</table>
@@ -68,12 +68,16 @@ class WeekWeatherTable extends Component {
 		{
 			return (<p>Loading State</p>);
 		}	
+		else if(this.props.failed)
+		{
+			return (<p>Failed State</p>);
+		}	
 		else 
 		{
 			const cityName = this.props.weather.city.name;
+			const countryName = this.props.weather.city.country;
 			const list = this.props.weather.list;
 			const cards = [];
-			const weekday = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]; //NOTE: Breaks DRY
 			
 			for(let i = 0; i < list.length; i+=5) //magic number - why does this work?
 			{
@@ -100,7 +104,7 @@ class WeekWeatherTable extends Component {
 					<tbody>
 					<tr>
 						<th colSpan="5">
-							{cityName}
+							{cityName}{', '}{countryName}
 						</th>
 					</tr>
 					<tr>
@@ -125,7 +129,6 @@ class CitySearchBar extends Component {
     this.props.onChange(e.target.value);
   }
   handleQuerySubmit(e) {
-	console.log(e.target)
     this.props.onSubmit(e.target.querySelector('input').value);
 	e.preventDefault();
   }
@@ -140,30 +143,21 @@ class CitySearchBar extends Component {
 				value={query} 
 				onChange={this.handleQueryChange} 
 			/>
+			<button type="submit">Submit</button>
 			<p><input type="checkbox"/>{' '}Check for Celsius</p>
 			</form>
 		);
 	}
 }
 
-/*State in the Application
-	- Empty State - initial state
-	- Loading State - async with api call, after submit to OpenWeatherAPI
-	- Invalid State - city not found in search query
-	- Success State - city found in search query and 5 day forecast found
-		- Toggle for Celsius vs Fahrenheit - is this state? can be computed
-Where does the state live?
-	WeatherWidget - Handles Search Bar and Weather Table	
-*/
-
-
 class WeatherWidget extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
 			query : '',
-			loading : false,
+			loading : false, //Future design - maybe better to state as an enum?
 			empty: true,
+			failed: false,
 			weather : {},
 		}
 		this.handleQueryChange = this.handleQueryChange.bind(this); //For some reason couldn't get new format to bind properly - using this binding for now
@@ -186,16 +180,27 @@ class WeatherWidget extends Component {
 		this.setState({
 			query: query,
 			loading: true,
+			failed: false,
+			empty: false,
 		});
-		//fetch('http://api.openweathermap.org/data/2.5/forecast?id=524901&APPID=f875710aea4e02462c8edf532cad97f3')
 		fetch(api_url + api_query + api_key)
-			.then(response => response.json())
-			.then(data => this.setState({
-				loading: false,
-				empty: false,
-				weather: data
-			})
-		);
+		.then(response => {
+			if (!response.ok) {
+				this.setState({
+					failed: true,
+				});
+			}
+			return response.json()
+		})
+		.then(data => {
+			if (this.state.failed)
+			{
+				alert("Could not find " + query + " in our database. Sorry!");
+				return this.setState({loading: false, failed: true, empty: false, weather: data});
+			} else {
+				return this.setState({ loading: false, empty: false, failed: false, weather: data });
+			}
+		});
 	}
 	render() {
 		return (
@@ -208,6 +213,7 @@ class WeatherWidget extends Component {
 				<WeekWeatherTable 
 					query={this.state.query}
 					loading={this.state.loading}
+					failed={this.state.failed}
 					empty={this.state.empty}
 					weather={this.state.weather}/>
 			</div>
