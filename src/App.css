@@ -20,12 +20,24 @@
 table {
 	margin-left: auto;
 	margin-right: auto;
+	border: 1px solid;
 }
-.empty .weather-card{
-	display: none;
-	color: blue;
+th {
+	border: 1px solid #CCC;
+	background: #F3F3F3;
+}
+.empty {
+	color: gray;
+}
+.loading{
+	border: none;
+}
+.loading th {
+	border: none;
+	background: none;
 }
 .loading .weather-card{
+	border: none;
 	display: none;
 	color: gray;
 }
@@ -38,8 +50,12 @@ table {
 #spinner {
 	display: none;
 }
+.failed th{
+	color: #990000;
+}
+
 .failed .weather-card{
-	color: red;
+	color: gray;
 }
 
 @keyframes App-logo-spin {

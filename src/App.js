@@ -30,8 +30,12 @@ class DayWeatherCard extends Component {
 		const day = this.props.day;
 		const conditions = this.props.conditions;
 
-		const temp_max = convertFahrenheit(this.props.temp_max); //TODO: Create Celsius/Fahrenheit conversions
-		const temp_min = convertFahrenheit(this.props.temp_min);
+		const temp_max = this.props.convert 
+			? convertCelsius(this.props.temp_max) 
+			: convertFahrenheit(this.props.temp_max); 
+		const temp_min = this.props.convert 
+			? convertCelsius(this.props.temp_min)
+			: convertFahrenheit(this.props.temp_min);
 		const weekday = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 		return (
 			<td className='weather-card' id={weekday[day]}>
@@ -46,8 +50,8 @@ class DayWeatherCard extends Component {
 					<td colSpan="2">{conditions}</td>
 				</tr>
 				<tr>
-					<td>Max: {temp_max}</td>
-					<td>Min: {temp_min}</td>
+					<td>Max: {temp_max + (this.props.convert ? ' °C' : ' °F')}</td>
+					<td>Min: {temp_min + (this.props.convert ? ' °C' : ' °F')}</td>
 				</tr>
 			</tbody>
 			</table>
@@ -73,6 +77,7 @@ class WeekWeatherTable extends Component {
 				conditions="Partly Cloudy"
 				temp_max= {300}
 				temp_min= {280}
+				convert= {this.props.convert}
 			/>);
 		}
 
@@ -110,6 +115,7 @@ class WeekWeatherTable extends Component {
 					conditions={list[i]['weather'][0]['main']}
 					temp_max={list[i]['main']['temp_max'] }
 					temp_min={list[i]['main']['temp_min'] }
+					convert= {this.props.convert}
 				/>);
 
 				let targetday = (day+1)%7;
@@ -148,10 +154,14 @@ class CitySearchBar extends Component {
     super(props);
     this.handleQueryChange = this.handleQueryChange.bind(this);
     this.handleQuerySubmit = this.handleQuerySubmit.bind(this);
+    this.handleTempConvert = this.handleTempConvert.bind(this);
   }
   
   handleQueryChange(e) {
     this.props.onChange(e.target.value);
+  }
+  handleTempConvert(e) {
+    this.props.onConvert(e.target.value);
   }
   handleQuerySubmit(e) {
     this.props.onSubmit(e.target.querySelector('input').value);
@@ -169,7 +179,7 @@ class CitySearchBar extends Component {
 				onChange={this.handleQueryChange} 
 			/>
 			<button type="submit">Submit</button>
-			<p><input type="checkbox"/>{' '}Check for Celsius</p>
+			<p><input type="checkbox" onChange={this.handleTempConvert}/>{' '}Check for Celsius</p>
 			</form>
 		);
 	}
@@ -184,10 +194,13 @@ class WeatherWidget extends Component {
 			loading : false, //Future design - maybe better to state as an enum?
 			failed: false,
 			weather : {},
+			convert: false,
 		}
 		this.handleQueryChange = this.handleQueryChange.bind(this); //For some reason couldn't get new format to bind properly - using this binding for now
 		this.handleQuerySubmit = this.handleQuerySubmit.bind(this); 
+		this.handleTempConvert = this.handleTempConvert.bind(this); 
 	}
+
 
 	handleQueryChange(query) {
 		this.setState({
@@ -196,6 +209,11 @@ class WeatherWidget extends Component {
 			empty: query === '',
 		});
 
+	}
+	handleTempConvert() {
+		this.setState({
+			convert: !this.state.convert,
+		});
 	}
 	handleQuerySubmit(query) {
 		const api_url = "https://api.openweathermap.org/data/2.5/forecast?q=";
@@ -235,13 +253,15 @@ class WeatherWidget extends Component {
 					query={this.state.query}
 					onChange={this.handleQueryChange}
 					onSubmit={this.handleQuerySubmit}
+					onConvert={this.handleTempConvert}
 				/>
 				<WeekWeatherTable 
 					query={this.state.query}
 					loading={this.state.loading}
 					failed={this.state.failed}
 					empty={this.state.empty}
-					weather={this.state.weather}/>
+					weather={this.state.weather}
+					convert={this.state.convert}/>
 			</div>
 		)
 	}
