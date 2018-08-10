@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
+import spinner from './logo.svg';
 import './App.css';
 
 class App extends Component {
@@ -7,7 +7,6 @@ class App extends Component {
 		return (
 			<div className="App">
 				<header className="App-header">
-					<img src={logo} className="App-logo" alt="logo" />
 					<h1 className="App-title">5 Day Weather Viewer</h1>
 				</header>
 				<p className="App-intro">
@@ -18,7 +17,7 @@ class App extends Component {
 		);
 	}
 }
-//List of components
+
 function convertFahrenheit(ktemp) {
 	return Math.trunc(ktemp * (9/5) - 459.67);
 }
@@ -60,24 +59,46 @@ class DayWeatherCard extends Component {
 class WeekWeatherTable extends Component {
 
 	render() {
+		let cityName = "Townsville";
+		let countryName = "USA";
+		let cards = Array(5).fill(null);
+		let state = ""
+		let list = []
+
+		for(let i = 0; i < 5; i++) 
+		{
+			cards.push(<DayWeatherCard 
+				key={i} 
+				day={i}
+				conditions="Partly Cloudy"
+				temp_max= {300}
+				temp_min= {280}
+			/>);
+		}
+
 		if(this.props.empty)
 		{
-			return (<p>Empty State</p>);
+			state = "empty";
 		}	
 		else if(this.props.loading)
 		{
-			return (<p>Loading State</p>);
+			state = "loading";
+			cityName = "Loading...";
+			countryName = '';
 		}	
 		else if(this.props.failed)
 		{
-			return (<p>Failed State</p>);
+			cityName = "Error";
+			countryName = '';
+			state = "failed";
 		}	
 		else 
 		{
-			const cityName = this.props.weather.city.name;
-			const countryName = this.props.weather.city.country;
-			const list = this.props.weather.list;
-			const cards = [];
+			state = "success";
+			cityName = this.props.weather.city.name;
+			countryName = this.props.weather.city.country;
+			list = this.props.weather.list;
+			cards = [];
 			
 			for(let i = 0; i < list.length; i+=5) //magic number - why does this work?
 			{
@@ -98,22 +119,26 @@ class WeekWeatherTable extends Component {
 					day = new Date(list[i]['dt']*1000).getDay(); //TODO: research - sort of stack breakage?
 				}
 			}
+		}
 
-			return (
-				<table>
-					<tbody>
-					<tr>
-						<th colSpan="5">
-							{cityName}{', '}{countryName}
-						</th>
-					</tr>
-					<tr>
-						{cards}
-					</tr>
-					</tbody>
-				</table>
-			);
-		}	
+		return (
+			<div>
+			<img src={spinner} className={state} id="spinner" alt="loading" />
+			<table className={state}>
+				<tbody>
+				<tr>
+					<th colSpan="5">
+						{cityName}{' '}{countryName}
+					</th>
+				</tr>
+				<tr>
+					{cards}
+				</tr>
+				</tbody>
+			</table>
+			</div>
+		);
+		
 	}
 
 }
@@ -155,8 +180,8 @@ class WeatherWidget extends Component {
 		super(props);
 		this.state = {
 			query : '',
-			loading : false, //Future design - maybe better to state as an enum?
 			empty: true,
+			loading : false, //Future design - maybe better to state as an enum?
 			failed: false,
 			weather : {},
 		}
