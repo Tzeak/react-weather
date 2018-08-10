@@ -198,9 +198,10 @@ class WeatherWidget extends Component {
 
 	}
 	handleQuerySubmit(query) {
-		const api_url = "http://api.openweathermap.org/data/2.5/forecast?q=";
+		const api_url = "https://api.openweathermap.org/data/2.5/forecast?q=";
 		const api_key = "&APPID=f875710aea4e02462c8edf532cad97f3";
-		const api_query = query;
+		//const api_query = query;
+		const api_query = encodeURIComponent(query); //
 		
 		this.setState({
 			query: query,
