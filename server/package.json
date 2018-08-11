@@ -1,0 +1,21 @@
+{
+  "name": "weatherserver",
+  "version": "1.0.0",
+  "description": "local proxy server ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.js"
+  },
+  "author": "Roshan Ramankutty",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^1.18.3"
+  },
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3",
+    "node-fetch": "^2.2.0",
+    "request": "^2.88.0"
+  }
+}
